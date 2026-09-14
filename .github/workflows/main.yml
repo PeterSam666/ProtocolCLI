@@ -1,0 +1,32 @@
+name: .NET Core Continuous Integration
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5 #  Bands the job if it hangs for more than 5 minutes
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore Test Project
+      run: dotnet restore ModbusDriver.Tests/ModbusDriver.Tests.csproj
+
+    - name: Build Test Project
+      run: dotnet build ModbusDriver.Tests/ModbusDriver.Tests.csproj --configuration Release --no-restore
+
+    #  Added timeout specifically for the test execution stage
+    - name: Run Unit Tests
+      timeout-minutes: 2 
+      run: dotnet test ModbusDriver.Tests/ModbusDriver.Tests.csproj --configuration Release --no-build --verbosity normal
