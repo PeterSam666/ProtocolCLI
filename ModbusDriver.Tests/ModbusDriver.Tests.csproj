@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ModbusSND\ModbusDriver.csproj" />
+    <ProjectReference Include="..\ModbusDriver\ModbusDriver.csproj" />
   </ItemGroup>
 
   <ItemGroup>
