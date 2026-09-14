@@ -16,6 +16,9 @@ namespace ModbusDriver.Streams
 
         public bool IsConnected => _tcpClient != null && _tcpClient.Connected;
 
+        public int ReadTimeout { get; set; } = 1000;
+        public int WriteTimeout { get; set; } = 1000;
+
         public TcpStream(string ipAddress, int port = 502)
         {
             _ipAddress = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));
@@ -33,8 +36,8 @@ namespace ModbusDriver.Streams
             _tcpClient.Connect(_ipAddress, _port);
             _networkStream = _tcpClient.GetStream();
 
-            _tcpClient.ReceiveTimeout = 1000;
-            _tcpClient.SendTimeout = 1000;
+            _tcpClient.ReceiveTimeout = ReadTimeout;
+            _tcpClient.SendTimeout = WriteTimeout;
         }
 
         public void Disconnect()

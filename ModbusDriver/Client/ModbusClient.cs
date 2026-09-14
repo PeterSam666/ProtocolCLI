@@ -10,6 +10,7 @@ namespace ModbusDriver.Client
     {
         private readonly IModbusFormatter _formatter;
         private readonly IModbusStream _stream;
+        private readonly object _networkLock = new object();
 
         public ModbusClient(IModbusFormatter formatter, IModbusStream stream)
         {
@@ -19,6 +20,18 @@ namespace ModbusDriver.Client
 
         public void Connect() => _stream.Connect();
         public void Disconnect() => _stream.Disconnect();
+
+        public int ReadTimeout
+        {
+            get => _stream.ReadTimeout;
+            set => _stream.ReadTimeout = value;
+        }
+
+        public int WriteTimeout
+        {
+            get => _stream.WriteTimeout;
+            set => _stream.WriteTimeout = value;
+        }
 
         public bool[] ReadCoils(byte unitId, ushort startAddress, ushort quantity)
         {
@@ -34,25 +47,13 @@ namespace ModbusDriver.Client
 
         public ushort[] ReadHoldingRegisters(byte unitId, ushort startAddress, ushort quantity)
         {
-            byte[] requestBuffer = _formatter.BuildRequest(unitId, 3, startAddress, quantity);
-
-            _stream.Write(requestBuffer, 0, requestBuffer.Length);
-
-            byte[] readBuffer = new byte[256];
-            int bytesRead = _stream.Read(readBuffer, 0, readBuffer.Length);
-
-            byte[] rawResponse = new byte[bytesRead];
-            Array.Copy(readBuffer, rawResponse, bytesRead);
-
-            byte[] rawData = _formatter.ParseResponse(rawResponse, 3);
+            byte[] rawData = SendAndReceive(unitId, 3, startAddress, quantity);
 
             ushort[] registers = new ushort[rawData.Length / 2];
             for (int i = 0; i < registers.Length; i++)
             {
                 registers[i] = (ushort)((rawData[i * 2] << 8) | rawData[i * 2 + 1]);
             }
-
-
             return registers;
         }
 
@@ -101,17 +102,20 @@ namespace ModbusDriver.Client
 
         private byte[] SendAndReceive(byte unitId, byte functionCode, ushort startAddress, ushort quantityOrValue)
         {
-            byte[] request = _formatter.BuildRequest(unitId, functionCode, startAddress, quantityOrValue);
+            lock (_networkLock)
+            {
+                byte[] request = _formatter.BuildRequest(unitId, functionCode, startAddress, quantityOrValue);
 
-            _stream.Write(request, 0, request.Length);
+                _stream.Write(request, 0, request.Length);
 
-            byte[] buffer = new byte[512];
-            int bytesRead = _stream.Read(buffer, 0, buffer.Length);
+                byte[] buffer = new byte[512];
+                int bytesRead = _stream.Read(buffer, 0, buffer.Length);
 
-            byte[] rawResponse = new byte[bytesRead];
-            Array.Copy(buffer, rawResponse, bytesRead);
+                byte[] rawResponse = new byte[bytesRead];
+                Array.Copy(buffer, rawResponse, bytesRead);
 
-            return _formatter.ParseResponse(rawResponse, functionCode);
+                return _formatter.ParseResponse(rawResponse, functionCode);
+            }
         }
 
         private ushort[] ConvertBytesToRegisters(byte[] rawData)

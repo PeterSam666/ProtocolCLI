@@ -11,5 +11,7 @@ namespace ModbusDriver.Core
         bool IsConnected { get; }
         void Write(byte[] buffer, int offset, int count);
         int Read(byte[] buffer, int offset, int count);
+        int ReadTimeout { get; set; }
+        int WriteTimeout { get; set; }
     }
 }
