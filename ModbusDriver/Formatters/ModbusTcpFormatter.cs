@@ -7,7 +7,7 @@ namespace ModbusDriver.Formatters
 {
     public class ModbusTcpFormatter : IModbusFormatter
     {
-        private ushort _transactionId = 0;
+    private ushort _transactionId = 0;
 
         public byte[] BuildRequest(byte unitId, byte functionCode, ushort startAddress, ushort quantity)
         {
