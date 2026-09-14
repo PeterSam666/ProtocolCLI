@@ -11,24 +11,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout the source code
+    # Step 1: Checkout the source code from Git repository
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # Step 2: Install .NET SDK 8.0
+    # Step 2: Setup .NET SDK 8.0 environment
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
 
-    # Step 3: Restore dependencies by searching for all .csproj files directly
-    - name: Restore Dependencies
-      run: dotnet restore
+    # Step 3: Run Restore directly on the Test project file 
+    # (It will automatically find and restore the main library project via project reference)
+    - name: Restore Test Project
+      run: dotnet restore **/*[Tt]ests/*.csproj
 
-    # Step 4: Build all projects independently (Bypassing the broken .sln file)
-    - name: Build Solution
-      run: dotnet build --configuration Release --no-restore
+    # Step 4: Build the Test project in Release mode
+    - name: Build Test Project
+      run: dotnet build **/*[Tt]ests/*.csproj --configuration Release --no-restore
 
-    # Step 5: Run all unit tests across the test projects
+    # Step 5: Execute all Modbus TCP xUnit Tests
     - name: Run Unit Tests
-      run: dotnet test --configuration Release --no-build --verbosity normal
+      run: dotnet test **/*[Tt]ests/*.csproj --configuration Release --no-build --verbosity normal
