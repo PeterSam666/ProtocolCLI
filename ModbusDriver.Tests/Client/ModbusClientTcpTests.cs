@@ -21,6 +21,9 @@ namespace ModbusDriver.Tests.Client
             public void Connect() => IsConnected = true;
             public void Disconnect() => IsConnected = false;
 
+            public int ReadTimeout { get; set; } = 1000;
+            public int WriteTimeout { get; set; } = 1000;
+
             public void Write(byte[] buffer, int offset, int count)
             {
                 // Capture the raw bytes sent by ModbusClient for later validation
