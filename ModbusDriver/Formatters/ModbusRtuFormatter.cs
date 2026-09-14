@@ -12,8 +12,8 @@ namespace ModbusDriver.Formatters
             byte[] frame = new byte[8];
             frame[0] = unitId;
             frame[1] = functionCode;
-            frame[2] = (byte)(startAddress >> 8);  
-            frame[3] = (byte)(startAddress & 0xFF); 
+            frame[2] = (byte)(startAddress >> 8);
+            frame[3] = (byte)(startAddress & 0xFF);
             frame[4] = (byte)(quantity >> 8);
             frame[5] = (byte)(quantity & 0xFF);
 

@@ -11,15 +11,15 @@ namespace ModbusDriver.Formatters
 
         public byte[] BuildRequest(byte unitId, byte functionCode, ushort startAddress, ushort quantity)
         {
-            _transactionId++; 
-            byte[] frame = new byte[12]; 
+            _transactionId++;
+            byte[] frame = new byte[12];
 
             frame[0] = (byte)(_transactionId >> 8);
             frame[1] = (byte)(_transactionId & 0xFF);
-            frame[2] = 0; 
+            frame[2] = 0;
             frame[3] = 0;
-            frame[4] = 0; 
-            frame[5] = 6; 
+            frame[4] = 0;
+            frame[5] = 6;
             frame[6] = unitId;
 
             frame[7] = functionCode;
@@ -39,7 +39,7 @@ namespace ModbusDriver.Formatters
             byte functionCode = responseBytes[7];
 
             if ((functionCode & 0x80) != 0)
-                throw new ModbusException(responseBytes[8]); 
+                throw new ModbusException(responseBytes[8]);
 
             if (functionCode != expectedFunctionCode)
                 throw new Exception("Unexpected function code received.");

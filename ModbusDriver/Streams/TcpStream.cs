@@ -49,10 +49,10 @@ namespace ModbusDriver.Streams
             {
                 throw new InvalidOperationException("Modbus TCP device is not connected.");
             }
-                
+
 
             _networkStream.Write(buffer, offset, count);
-            _networkStream.Flush(); 
+            _networkStream.Flush();
         }
 
         public int Read(byte[] buffer, int offset, int count)
@@ -60,7 +60,7 @@ namespace ModbusDriver.Streams
             if (!IsConnected)
             {
                 throw new InvalidOperationException("Modbus TCP device is not connected.");
-            } 
+            }
 
             return _networkStream.Read(buffer, offset, count);
         }
