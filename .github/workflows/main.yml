@@ -9,27 +9,24 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 5 #  Bands the job if it hangs for more than 5 minutes
 
     steps:
-    # Step 1: Checkout the source code from Git repository
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # Step 2: Setup .NET SDK 8.0 environment
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
 
-    # Step 3: Run Restore directly on your real Test project file path
-    # (This will automatically restore the main library project via reference)
     - name: Restore Test Project
       run: dotnet restore ModbusDriver.Tests/ModbusDriver.Tests.csproj
 
-    # Step 4: Build the Test project using its exact file path
     - name: Build Test Project
       run: dotnet build ModbusDriver.Tests/ModbusDriver.Tests.csproj --configuration Release --no-restore
 
-    # Step 5: Execute all xUnit tests directly through the Test project path
+    #  Added timeout specifically for the test execution stage
     - name: Run Unit Tests
+      timeout-minutes: 2 
       run: dotnet test ModbusDriver.Tests/ModbusDriver.Tests.csproj --configuration Release --no-build --verbosity normal
