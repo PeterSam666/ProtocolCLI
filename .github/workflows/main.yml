@@ -2,14 +2,18 @@ name: .NET Core Continuous Integration
 
 on:
   push:
-    branches: [ "master", "main" ]
+    branches: [ "master", "main", "dev" ]
   pull_request:
-    branches: [ "master", "main" ]
+    branches: [ "master", "main", "dev" ]
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5 #  Bands the job if it hangs for more than 5 minutes
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
 
     steps:
     - name: Checkout Code
@@ -23,10 +27,16 @@ jobs:
     - name: Restore Test Project
       run: dotnet restore ModbusDriver.Tests/ModbusDriver.Tests.csproj
 
+    - name: Check Code Formatting
+      run: dotnet format --verify-no-changes --no-restore
+
     - name: Build Test Project
       run: dotnet build ModbusDriver.Tests/ModbusDriver.Tests.csproj --configuration Release --no-restore
 
-    #  Added timeout specifically for the test execution stage
-    - name: Run Unit Tests
-      timeout-minutes: 2 
-      run: dotnet test ModbusDriver.Tests/ModbusDriver.Tests.csproj --configuration Release --no-build --verbosity normal
+    - name: Run Unit Tests with Coverage
+      run: >
+        dotnet test ModbusDriver.Tests/ModbusDriver.Tests.csproj 
+        --configuration Release 
+        --no-build 
+        --verbosity normal
+        --collect:"XPlat Code Coverage"
