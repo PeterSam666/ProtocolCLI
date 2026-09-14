@@ -21,15 +21,15 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
-    # Step 3: Run Restore directly on the Test project file 
-    # (It will automatically find and restore the main library project via project reference)
+    # Step 3: Run Restore directly on your real Test project file path
+    # (This will automatically restore the main library project via reference)
     - name: Restore Test Project
-      run: dotnet restore **/*[Tt]ests/*.csproj
+      run: dotnet restore ModbusDriver.Tests/ModbusDriver.Tests.csproj
 
-    # Step 4: Build the Test project in Release mode
+    # Step 4: Build the Test project using its exact file path
     - name: Build Test Project
-      run: dotnet build **/*[Tt]ests/*.csproj --configuration Release --no-restore
+      run: dotnet build ModbusDriver.Tests/ModbusDriver.Tests.csproj --configuration Release --no-restore
 
-    # Step 5: Execute all Modbus TCP xUnit Tests
+    # Step 5: Execute all xUnit tests directly through the Test project path
     - name: Run Unit Tests
-      run: dotnet test **/*[Tt]ests/*.csproj --configuration Release --no-build --verbosity normal
+      run: dotnet test ModbusDriver.Tests/ModbusDriver.Tests.csproj --configuration Release --no-build --verbosity normal
