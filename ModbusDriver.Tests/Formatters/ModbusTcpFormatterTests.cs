@@ -35,7 +35,7 @@ namespace ModbusDriver.Tests.Formatters
             Assert.Equal(0x01, actualFrame[1]);
             // Protocol ID (Always 0x0000 for Modbus TCP)
             Assert.Equal(0x00, actualFrame[2]);
-            Assert.Equal(0x03, actualFrame[3]);
+            Assert.Equal(0x00, actualFrame[3]);
             // Length field (0x0006 bytes remaining from Unit ID to the end of the frame)
             Assert.Equal(0x00, actualFrame[4]);
             Assert.Equal(0x06, actualFrame[5]);
