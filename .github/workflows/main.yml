@@ -11,19 +11,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout the source code from Git
     - name: Checkout Code
       uses: actions/checkout@v4
 
+    # Step 2: Install .NET SDK 8.0 (Required to run the xUnit Test project)
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
 
+    # Step 3: Restore NuGet dependencies automatically for all projects
     - name: Restore Dependencies
       run: dotnet restore
 
+    # Step 4: Build the entire solution in Release mode
     - name: Build Solution
       run: dotnet build --configuration Release --no-restore
 
+    # Step 5: Run all xUnit tests in memory
     - name: Run Unit Tests
       run: dotnet test --configuration Release --no-build --verbosity normal
