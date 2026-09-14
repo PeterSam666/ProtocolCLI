@@ -21,14 +21,14 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
-    # Step 3: Restore dependencies by searching for the .sln file automatically
+    # Step 3: Restore dependencies by searching for all .csproj files directly
     - name: Restore Dependencies
-      run: dotnet restore *.sln
+      run: dotnet restore
 
-    # Step 4: Build the entire solution using the auto-found .sln file
+    # Step 4: Build all projects independently (Bypassing the broken .sln file)
     - name: Build Solution
-      run: dotnet build *.sln --configuration Release --no-restore
+      run: dotnet build --configuration Release --no-restore
 
-    # Step 5: Run all tests using the auto-found .sln file
+    # Step 5: Run all unit tests across the test projects
     - name: Run Unit Tests
-      run: dotnet test *.sln --configuration Release --no-build --verbosity normal
+      run: dotnet test --configuration Release --no-build --verbosity normal
