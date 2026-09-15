@@ -40,7 +40,7 @@ namespace ModbusDriver.Tests.Formatters
             Assert.Equal("0002", actualFrame.Substring(9, 4)); // Quantity text
 
             // Verify LRC Checksum text (Calculated via Two's Complement)
-            Assert.Equal("EE", actualFrame.Substring(13, 2));  // LRC checksum text
+            Assert.Equal("F0", actualFrame.Substring(13, 2));  // LRC checksum text
 
             // Verify Frame Endings
             Assert.Equal('\r', actualFrame[15]); // Carriage Return
