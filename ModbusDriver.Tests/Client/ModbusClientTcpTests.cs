@@ -78,5 +78,63 @@ namespace ModbusDriver.Tests.Client
             Assert.Equal(500, result[0]);  // Verified: 0x01F4 equals 500
             Assert.Equal(1000, result[1]); // Verified: 0x03E8 equals 1000
         }
+
+        [Fact]
+        public void ReadHoldingRegisters_WhenRtuOverTcpResponseIsValid_ShouldReturnCorrectDecodedValues()
+        {
+            // Arrange
+            var fakeStream = new FakeTcpStream();
+            var formatter = new ModbusRtuOverTcpFormatter();
+            var client = new ModbusClient(formatter, fakeStream);
+
+            // Mocking a successful RTU-framed (CRC-16) response, delivered over a TCP socket
+            // instead of a real serial port. Reading 2 registers: 500 (0x01F4) and 1000 (0x03E8)
+            fakeStream.BytesToMockResponse = new byte[]
+            {
+                0x01,                   // Unit ID
+                0x03,                   // Function Code (Read Holding Registers)
+                0x04,                   // Byte Count (2 registers * 2 bytes = 4 bytes)
+                0x01, 0xF4,             // Register 1 value: 500
+                0x03, 0xE8,             // Register 2 value: 1000
+                0xBA, 0x83              // Correct CRC-16 for the preceding 7 bytes
+            };
+
+            client.Connect();
+
+            // Act
+            ushort[] result = client.ReadHoldingRegisters(unitId: 1, startAddress: 0, quantity: 2);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Length);
+            Assert.Equal(500, result[0]);
+            Assert.Equal(1000, result[1]);
+
+            // Bonus: confirm the request ModbusClient sent is a plain RTU frame (no MBAP header)
+            Assert.NotNull(fakeStream.BytesReceivedFromClient);
+            Assert.Equal(8, fakeStream.BytesReceivedFromClient!.Length);
+            Assert.Equal(0x01, fakeStream.BytesReceivedFromClient[0]); // Unit ID first, not a transaction ID
+        }
+
+        [Fact]
+        public void ReadHoldingRegisters_WhenCrcIsCorrupted_ShouldThrowModbusException()
+        {
+            // Arrange
+            var fakeStream = new FakeTcpStream();
+            var formatter = new ModbusRtuOverTcpFormatter();
+            var client = new ModbusClient(formatter, fakeStream);
+
+            fakeStream.BytesToMockResponse = new byte[]
+            {
+                0x01, 0x03, 0x04,
+                0x01, 0xF4, 0x03, 0xE8,
+                0xBB, 0x83              // Deliberately corrupted CRC
+            };
+
+            client.Connect();
+
+            // Act & Assert
+            Assert.Throws<ModbusException>(() => client.ReadHoldingRegisters(unitId: 1, startAddress: 0, quantity: 2));
+        }
     }
 }
