@@ -29,7 +29,7 @@ namespace ModbusDriver.Formatters
             if (responseBytes == null || responseBytes.Length < 5)
             {
                 throw new ModbusException("Response data is too short.");
-            }   
+            }
 
             ushort receivedCrc = (ushort)(responseBytes[responseBytes.Length - 2] | responseBytes[responseBytes.Length - 1] << 8);
             ushort calculatedCrc = CalculateCrc(responseBytes, responseBytes.Length - 2);
