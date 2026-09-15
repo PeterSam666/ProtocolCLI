@@ -105,7 +105,7 @@ namespace ModbusDriver.Tests.Client
             // Mocking a successful Modbus ASCII response string from a legacy controller
             // Frame content in plain text: ":01030401F403E8FA\r\n"
             // (FA is the calculated LRC checksum for this specific message sequence)
-            string asciiResponseString = ":01030401F403E817\r\n";
+            string asciiResponseString = ":01030401F403E802\r\n";
             fakeStream.BytesToMockResponse = Encoding.ASCII.GetBytes(asciiResponseString);
 
             client.Connect();
