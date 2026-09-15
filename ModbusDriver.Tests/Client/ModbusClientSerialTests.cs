@@ -14,6 +14,7 @@ namespace ModbusDriver.Tests.Client
         // --- Mock Stream Implementation for testing Serial ASCII I/O without real hardware ---
         private class FakeSerialStream : IModbusStream
         {
+            private int _readPosition = 0;
             public byte[]? BytesReceivedFromClient { get; private set; }
             public byte[]? BytesToMockResponse { get; set; }
             public bool IsConnected { get; private set; }
@@ -21,6 +22,7 @@ namespace ModbusDriver.Tests.Client
             public void Connect()
             {
                 IsConnected = true;
+                _readPosition = 0;
             }
 
             public void Disconnect()
@@ -39,12 +41,18 @@ namespace ModbusDriver.Tests.Client
 
             public int Read(byte[] buffer, int offset, int count)
             {
-                if (BytesToMockResponse == null)
+                if (BytesToMockResponse == null || _readPosition >= BytesToMockResponse.Length)
                 {
                     return 0;
                 }
-                Array.Copy(BytesToMockResponse, 0, buffer, offset, BytesToMockResponse.Length);
-                return BytesToMockResponse.Length;
+
+                int remainingBytes = BytesToMockResponse.Length - _readPosition;
+                int bytesToCopy = Math.Min(count, remainingBytes);
+
+                Array.Copy(BytesToMockResponse, _readPosition, buffer, offset, bytesToCopy);
+                _readPosition += bytesToCopy;
+
+                return bytesToCopy;
             }
 
             public void Dispose()
