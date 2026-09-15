@@ -7,24 +7,41 @@ namespace ModbusDriver.Formatters
 {
     public class ModbusAsciiFormatter : IModbusFormatter
     {
-        public byte[] BuildRequest(byte unitId, byte functionCode, ushort startAddress, ushort quantity)
+        public byte[] BuildRequest(byte unitId, byte functionCode, ushort startAddress, ushort quantity, byte[] data = null)
         {
-            byte[] rtuFrame = new byte[6];
-            rtuFrame[0] = unitId;
-            rtuFrame[1] = functionCode;
-            rtuFrame[2] = (byte)(startAddress >> 8);
-            rtuFrame[3] = (byte)(startAddress & 0xFF);
-            rtuFrame[4] = (byte)(quantity >> 8);
-            rtuFrame[5] = (byte)(quantity & 0xFF);
+            byte[] rtuFrame;
+
+            if (data == null)
+            {
+                rtuFrame = new byte[6];
+                rtuFrame[0] = unitId;
+                rtuFrame[1] = functionCode;
+                rtuFrame[2] = (byte)(startAddress >> 8);
+                rtuFrame[3] = (byte)(startAddress & 0xFF);
+                rtuFrame[4] = (byte)(quantity >> 8);
+                rtuFrame[5] = (byte)(quantity & 0xFF);
+            }
+            else
+            {
+                byte byteCount = (byte)data.Length;
+                rtuFrame = new byte[7 + byteCount];
+                rtuFrame[0] = unitId;
+                rtuFrame[1] = functionCode;
+                rtuFrame[2] = (byte)(startAddress >> 8);
+                rtuFrame[3] = (byte)(startAddress & 0xFF);
+                rtuFrame[4] = (byte)(quantity >> 8);
+                rtuFrame[5] = (byte)(quantity & 0xFF);
+                rtuFrame[6] = byteCount;
+                Array.Copy(data, 0, rtuFrame, 7, byteCount);
+            }
 
             byte lrc = CalculateLrc(rtuFrame, rtuFrame.Length);
 
             StringBuilder sb = new StringBuilder();
             sb.Append(":");
-
-            for (int i = 0; i < rtuFrame.Length; i++)
+            foreach (byte b in rtuFrame)
             {
-                sb.Append(rtuFrame[i].ToString("X2"));
+                sb.Append(b.ToString("X2"));
             }
             sb.Append(lrc.ToString("X2"));
             sb.Append("\r\n");
@@ -40,7 +57,6 @@ namespace ModbusDriver.Formatters
             }
 
             string asciiString = Encoding.ASCII.GetString(responseBytes).Trim();
-
             if (!asciiString.StartsWith(":"))
             {
                 throw new ModbusException("Invalid Modbus ASCII frame. Missing starting character ':'.");
@@ -53,19 +69,26 @@ namespace ModbusDriver.Formatters
                 rawBytes[i] = Convert.ToByte(hexData.Substring(i * 2, 2), 16);
             }
 
+            bool isException = (rawBytes[1] & 0x80) != 0;
+            if (isException)
+            {
+                byte excRecvLrc = rawBytes[3];
+                byte excCalcLrc = CalculateLrc(rawBytes, 3);
+                if (excRecvLrc != excCalcLrc)
+                {
+                    throw new ModbusException("LRC Check failed! Modbus ASCII data corrupted between lines.");
+                }
+                throw new ModbusException(rawBytes[2]);
+            }
+
             byte byteCount = rawBytes[2];
-            int expectedFrameLength = 3 + byteCount + 1; // ID + FC + ByteCount + เนื้อข้อมูล + 1 ไบต์ LRC
+            int expectedFrameLength = 3 + byteCount + 1;
 
             byte receivedLrc = rawBytes[expectedFrameLength - 1];
             byte calculatedLrc = CalculateLrc(rawBytes, expectedFrameLength - 1);
             if (receivedLrc != calculatedLrc)
             {
                 throw new ModbusException("LRC Check failed! Modbus ASCII data corrupted between lines.");
-            }
-
-            if ((rawBytes[1] & 0x80) != 0)
-            {
-                throw new ModbusException(rawBytes[2]);
             }
 
             if (rawBytes[1] != expectedFunctionCode)

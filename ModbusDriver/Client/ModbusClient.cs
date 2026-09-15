@@ -86,25 +86,30 @@ namespace ModbusDriver.Client
             bitArray.CopyTo(dataBytes, 0);
 
             ushort quantity = (ushort)values.Length;
-            SendAndReceive(unitId, 15, startAddress, quantity);
+            SendAndReceive(unitId, 15, startAddress, quantity, dataBytes);
         }
 
         public void WriteMultipleRegisters(byte unitId, ushort startAddress, ushort[] values)
         {
             if (values is null || values.Length is 0)
-            {
                 throw new ArgumentException("Write value cannot be null or empty.");
+
+            byte[] dataBytes = new byte[values.Length * 2];
+            for (int i = 0; i < values.Length; i++)
+            {
+                dataBytes[i * 2] = (byte)(values[i] >> 8);
+                dataBytes[i * 2 + 1] = (byte)(values[i] & 0xFF);
             }
 
             ushort quantity = (ushort)values.Length;
-            SendAndReceive(unitId, 16, startAddress, quantity);
+            SendAndReceive(unitId, 16, startAddress, quantity, dataBytes);
         }
 
-        private byte[] SendAndReceive(byte unitId, byte functionCode, ushort startAddress, ushort quantityOrValue)
+        private byte[] SendAndReceive(byte unitId, byte functionCode, ushort startAddress, ushort quantityOrValue, byte[] data = null)
         {
             lock (_networkLock)
             {
-                byte[] request = _formatter.BuildRequest(unitId, functionCode, startAddress, quantityOrValue);
+                byte[] request = _formatter.BuildRequest(unitId, functionCode, startAddress, quantityOrValue, data);
 
                 _stream.Write(request, 0, request.Length);
 

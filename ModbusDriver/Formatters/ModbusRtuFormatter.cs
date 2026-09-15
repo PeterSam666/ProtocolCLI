@@ -7,20 +7,41 @@ namespace ModbusDriver.Formatters
 {
     public class ModbusRtuFormatter : IModbusFormatter
     {
-        public byte[] BuildRequest(byte unitId, byte functionCode, ushort startAddress, ushort quantity)
+        public byte[] BuildRequest(byte unitId, byte functionCode, ushort startAddress, ushort quantity, byte[]? data = null)
         {
-            byte[] frame = new byte[8];
+            byte[] frame;
+
+            if (data == null)
+            {
+                // Read / Write-single: เหมือนเดิม
+                frame = new byte[8];
+                frame[0] = unitId;
+                frame[1] = functionCode;
+                frame[2] = (byte)(startAddress >> 8);
+                frame[3] = (byte)(startAddress & 0xFF);
+                frame[4] = (byte)(quantity >> 8);
+                frame[5] = (byte)(quantity & 0xFF);
+
+                ushort crc0 = CalculateCrc(frame, 6);
+                frame[6] = (byte)(crc0 & 0xFF);
+                frame[7] = (byte)(crc0 >> 8);
+                return frame;
+            }
+
+            byte byteCount = (byte)data.Length;
+            frame = new byte[7 + byteCount + 2];
             frame[0] = unitId;
             frame[1] = functionCode;
             frame[2] = (byte)(startAddress >> 8);
             frame[3] = (byte)(startAddress & 0xFF);
             frame[4] = (byte)(quantity >> 8);
             frame[5] = (byte)(quantity & 0xFF);
+            frame[6] = byteCount;
+            Array.Copy(data, 0, frame, 7, byteCount);
 
-            ushort crc = CalculateCrc(frame, 6);
-            frame[6] = (byte)(crc & 0xFF);
-            frame[7] = (byte)(crc >> 8);
-
+            ushort crc = CalculateCrc(frame, frame.Length - 2);
+            frame[frame.Length - 2] = (byte)(crc & 0xFF);
+            frame[frame.Length - 1] = (byte)(crc >> 8);
             return frame;
         }
 
@@ -29,6 +50,18 @@ namespace ModbusDriver.Formatters
             if (responseBytes == null || responseBytes.Length < 5)
             {
                 throw new ModbusException("Response data is too short.");
+            }
+
+            bool isException = (responseBytes[1] & 0x80) != 0;
+            if (isException)
+            {
+                ushort excCrc = (ushort)(responseBytes[3] | (responseBytes[4] << 8));
+                ushort excCalc = CalculateCrc(responseBytes, 3);
+                if (excCrc != excCalc)
+                {
+                    throw new ModbusException("CRC Check failed! Data corrupted.");
+                }
+                throw new ModbusException(responseBytes[2]);
             }
 
             byte byteCount = responseBytes[2];
@@ -44,11 +77,6 @@ namespace ModbusDriver.Formatters
             if (receivedCrc != calculatedCrc)
             {
                 throw new ModbusException("CRC Check failed! Data corrupted.");
-            }
-
-            if ((responseBytes[1] & 0x80) != 0)
-            {
-                throw new ModbusException(responseBytes[2]);
             }
 
             if (responseBytes[1] != expectedFunctionCode)
