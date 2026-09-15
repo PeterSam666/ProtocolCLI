@@ -53,8 +53,11 @@ namespace ModbusDriver.Formatters
                 rawBytes[i] = Convert.ToByte(hexData.Substring(i * 2, 2), 16);
             }
 
-            byte receivedLrc = rawBytes[rawBytes.Length - 1];
-            byte calculatedLrc = CalculateLrc(rawBytes, rawBytes.Length - 1);
+            byte byteCount = rawBytes[2];
+            int expectedFrameLength = 3 + byteCount + 1; // ID + FC + ByteCount + เนื้อข้อมูล + 1 ไบต์ LRC
+
+            byte receivedLrc = rawBytes[expectedFrameLength - 1];
+            byte calculatedLrc = CalculateLrc(rawBytes, expectedFrameLength - 1);
             if (receivedLrc != calculatedLrc)
             {
                 throw new ModbusException("LRC Check failed! Modbus ASCII data corrupted between lines.");
@@ -70,7 +73,6 @@ namespace ModbusDriver.Formatters
                 throw new ModbusException($"Unexpected function code received. Expected: {expectedFunctionCode}, but got: {rawBytes[1]}");
             }
 
-            byte byteCount = rawBytes[2];
             byte[] data = new byte[byteCount];
             Array.Copy(rawBytes, 3, data, 0, byteCount);
             return data;
