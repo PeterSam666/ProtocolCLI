@@ -27,18 +27,26 @@ namespace ModbusDriver.Formatters
         public byte[] ParseResponse(byte[] responseBytes, byte expectedFunctionCode)
         {
             if (responseBytes == null || responseBytes.Length < 5)
-                throw new Exception("Response data is too short.");
+            {
+                throw new ModbusException("Response data is too short.");
+            }   
 
             ushort receivedCrc = (ushort)(responseBytes[responseBytes.Length - 2] | responseBytes[responseBytes.Length - 1] << 8);
             ushort calculatedCrc = CalculateCrc(responseBytes, responseBytes.Length - 2);
             if (receivedCrc != calculatedCrc)
-                throw new Exception("CRC Check failed! Data corrupted.");
+            {
+                throw new ModbusException("CRC Check failed! Data corrupted.");
+            }
 
             if ((responseBytes[1] & 0x80) != 0)
+            {
                 throw new ModbusException(responseBytes[2]);
+            }
 
             if (responseBytes[1] != expectedFunctionCode)
-                throw new Exception("Unexpected function code received.");
+            {
+                throw new ModbusException($"Unexpected function code received. Expected: {expectedFunctionCode}, but got other code.");
+            }
 
             byte byteCount = responseBytes[2];
             byte[] data = new byte[byteCount];

@@ -30,7 +30,10 @@ namespace ModbusDriver.Streams
 
         public void Connect()
         {
-            if (IsConnected) return;
+            if (IsConnected)
+            {
+                return;
+            }
 
             _serialPort = new SerialPort(_portName, _baudRate, _parity, _dataBits, _stopBits)
             {
@@ -42,18 +45,29 @@ namespace ModbusDriver.Streams
 
         public void Disconnect()
         {
-            if (_serialPort != null && _serialPort.IsOpen) _serialPort.Close();
+            if (_serialPort != null && _serialPort.IsOpen)
+            {
+                _serialPort.Close();
+            }
         }
 
         public void Write(byte[] buffer, int offset, int count)
         {
-            if (!IsConnected) throw new InvalidOperationException("Serial port is not open.");
+            if (!IsConnected)
+            {
+                throw new InvalidOperationException("Serial port is not open.");
+            }
+
             _serialPort.Write(buffer, offset, count);
         }
 
         public int Read(byte[] buffer, int offset, int count)
         {
-            if (!IsConnected) throw new InvalidOperationException("Serial port is not open.");
+            if (!IsConnected)
+            {
+                throw new InvalidOperationException("Serial port is not open.");
+            }
+
             return _serialPort.Read(buffer, offset, count);
         }
 

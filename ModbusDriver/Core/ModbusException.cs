@@ -24,6 +24,12 @@ namespace ModbusDriver.Core
             ExceptionCode = exceptionCode;
         }
 
+        public ModbusException(string message)
+            : base($"[Modbus Comm Error] -> {message}")
+        {
+            ExceptionCode = 0x00;
+        }
+
         /// <summary>
         /// A static helper method that maps raw Modbus exception codes to their 
         /// standard industrial definitions and actionable troubleshooting steps.
