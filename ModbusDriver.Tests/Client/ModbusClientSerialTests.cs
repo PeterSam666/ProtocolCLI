@@ -46,13 +46,12 @@ namespace ModbusDriver.Tests.Client
                     return 0;
                 }
 
-                int remainingBytes = BytesToMockResponse.Length - _readPosition;
-                int bytesToCopy = Math.Min(count, remainingBytes);
+                int bytesToReturn = Math.Min(count, BytesToMockResponse.Length - _readPosition);
 
-                Array.Copy(BytesToMockResponse, _readPosition, buffer, offset, bytesToCopy);
-                _readPosition += bytesToCopy;
+                Array.Copy(BytesToMockResponse, _readPosition, buffer, offset, bytesToReturn);
+                _readPosition += bytesToReturn;
 
-                return bytesToCopy;
+                return bytesToReturn;
             }
 
             public void Dispose()
