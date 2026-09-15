@@ -11,7 +11,7 @@ namespace ModbusDriver.Core
         /// <summary>
         /// Gets the raw Modbus exception code returned by the slave/server device.
         /// </summary>
-                public byte ExceptionCode { get; }
+        public byte ExceptionCode { get; }
 
         /// <summary>
         /// Initializes a new instance of the ModbusException class with a specific exception code.
