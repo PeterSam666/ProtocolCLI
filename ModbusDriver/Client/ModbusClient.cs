@@ -112,7 +112,7 @@ namespace ModbusDriver.Client
                 int bytesRead = _stream.Read(buffer, 0, buffer.Length);
 
                 byte[] rawResponse = new byte[bytesRead];
-                Array.Copy(buffer, rawResponse, bytesRead);
+                Array.Copy(buffer, 0, rawResponse, 0, bytesRead);
 
                 return _formatter.ParseResponse(rawResponse, functionCode);
             }
