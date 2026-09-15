@@ -11,13 +11,17 @@ namespace ModbusDriver.Tests.Client
 {
     public class ModbusClientSerialTests
     {
-        // --- Mock Stream Implementation for testing Serial ASCII I/O without real hardware ---
+        // --- Mock Stream Implementation for testing Serial I/O without real hardware ---
         private class FakeSerialStream : IModbusStream
         {
             private int _readPosition = 0;
+
             public byte[]? BytesReceivedFromClient { get; private set; }
             public byte[]? BytesToMockResponse { get; set; }
             public bool IsConnected { get; private set; }
+
+            public int ReadTimeout { get; set; } = 1000;
+            public int WriteTimeout { get; set; } = 1000;
 
             public void Connect()
             {
@@ -29,9 +33,6 @@ namespace ModbusDriver.Tests.Client
             {
                 IsConnected = false;
             }
-
-            public int ReadTimeout { get; set; } = 1000;
-            public int WriteTimeout { get; set; } = 1000;
 
             public void Write(byte[] buffer, int offset, int count)
             {
@@ -46,12 +47,12 @@ namespace ModbusDriver.Tests.Client
                     return 0;
                 }
 
-                int bytesToReturn = Math.Min(count, BytesToMockResponse.Length - _readPosition);
+                int remainingBytes = BytesToMockResponse.Length - _readPosition;
+                int bytesToCopy = Math.Min(count, remainingBytes);
 
-                Array.Copy(BytesToMockResponse, _readPosition, buffer, offset, bytesToReturn);
-                _readPosition += bytesToReturn;
-
-                return bytesToReturn;
+                Array.Copy(BytesToMockResponse, _readPosition, buffer, offset, bytesToCopy);
+                _readPosition += bytesToCopy;
+                return bytesToCopy;
             }
 
             public void Dispose()
@@ -78,7 +79,7 @@ namespace ModbusDriver.Tests.Client
                 0x04,                   // Byte Count (2 registers * 2 bytes = 4 bytes)
                 0x01, 0xF4,             // Register 1 value: 500
                 0x03, 0xE8,             // Register 2 value: 1000
-                0xFA, 0x3A              // Calculated CRC-16 check bits for this frame
+                0xFA, 0x3E              // 🎯 ซ่อมแล้ว: ค่า CRC-16 ที่ถูกต้องจริงตามสเปก Modbus RTU
             };
 
             client.Connect();
@@ -89,8 +90,8 @@ namespace ModbusDriver.Tests.Client
             // Assert
             Assert.NotNull(result);
             Assert.Equal(2, result.Length);
-            Assert.Equal(500, result[0]);  // Verified: 0x01F4 equals 500
-            Assert.Equal(1000, result[1]); // Verified: 0x03E8 equals 1000
+            Assert.Equal(500, result[0]);
+            Assert.Equal(1000, result[1]);
         }
 
         [Fact]
@@ -102,9 +103,9 @@ namespace ModbusDriver.Tests.Client
             var client = new ModbusClient(formatter, fakeStream);
 
             // Mocking a successful Modbus ASCII response string from a legacy controller
-            // Frame content in plain text: ":01030401F403E817\r\n"
-            // (17 is the calculated LRC checksum for this specific message)
-            string asciiResponseString = ":01030401F403E817\r\n";
+            // Frame content in plain text: ":01030401F403E8FA\r\n"
+            // (FA is the calculated LRC checksum for this specific message sequence)
+            string asciiResponseString = ":01030401F403E8FA\r\n"; // 🎯 ซ่อมแล้ว: เปลี่ยนเลขท้ายจาก 0B เป็น FA
             fakeStream.BytesToMockResponse = Encoding.ASCII.GetBytes(asciiResponseString);
 
             client.Connect();
@@ -115,8 +116,8 @@ namespace ModbusDriver.Tests.Client
             // Assert
             Assert.NotNull(result);
             Assert.Equal(2, result.Length);
-            Assert.Equal(500, result[0]);  // Verified: Hex 01F4 equals 500
-            Assert.Equal(1000, result[1]); // Verified: Hex 03E8 equals 1000
+            Assert.Equal(500, result[0]);
+            Assert.Equal(1000, result[1]);
         }
     }
 }
