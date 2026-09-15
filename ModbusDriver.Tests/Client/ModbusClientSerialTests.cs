@@ -47,12 +47,12 @@ namespace ModbusDriver.Tests.Client
                     return 0;
                 }
 
-                int remainingBytes = BytesToMockResponse.Length - _readPosition;
-                int bytesToCopy = Math.Min(count, remainingBytes);
+                int bytesToReturn = Math.Min(count, BytesToMockResponse.Length - _readPosition);
 
-                Array.Copy(BytesToMockResponse, _readPosition, buffer, offset, bytesToCopy);
-                _readPosition += bytesToCopy;
-                return bytesToCopy;
+                Array.Copy(BytesToMockResponse, _readPosition, buffer, offset, bytesToReturn);
+                _readPosition += bytesToReturn;
+
+                return bytesToReturn;
             }
 
             public void Dispose()
@@ -105,7 +105,7 @@ namespace ModbusDriver.Tests.Client
             // Mocking a successful Modbus ASCII response string from a legacy controller
             // Frame content in plain text: ":01030401F403E8FA\r\n"
             // (FA is the calculated LRC checksum for this specific message sequence)
-            string asciiResponseString = ":01030401F403E802\r\n"; // 🎯 ซ่อมแล้ว: เปลี่ยนเลขท้ายจาก 0B เป็น FA
+            string asciiResponseString = ":01030401F403E817\r\n"; 
             fakeStream.BytesToMockResponse = Encoding.ASCII.GetBytes(asciiResponseString);
 
             client.Connect();
