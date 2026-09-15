@@ -49,6 +49,5 @@ namespace ModbusDriver.Tests.Formatters
             Assert.Equal(0x00, actualFrame[10]);        // Quantity High (0x00)
             Assert.Equal(0x02, actualFrame[11]);        // Quantity Low (0x02)
         }
-
     }
 }
