@@ -7,7 +7,7 @@ namespace ModbusDriver.Formatters
 {
     public class ModbusRtuFormatter : IModbusFormatter
     {
-        public byte[] BuildRequest(byte unitId, byte functionCode, ushort startAddress, ushort quantity, byte[]? data = null)
+        public byte[] BuildRequest(byte unitId, byte functionCode, ushort startAddress, ushort quantity, byte[] data = null)
         {
             byte[] frame;
 
