@@ -31,8 +31,16 @@ namespace ModbusDriver.Formatters
                 throw new ModbusException("Response data is too short.");
             }
 
-            ushort receivedCrc = (ushort)(responseBytes[responseBytes.Length - 2] | responseBytes[responseBytes.Length - 1] << 8);
-            ushort calculatedCrc = CalculateCrc(responseBytes, responseBytes.Length - 2);
+            byte byteCount = responseBytes[2];
+            int expectedFrameLength = 3 + byteCount + 2;
+
+            if (responseBytes.Length < expectedFrameLength)
+            {
+                throw new ModbusException("Response frame length does not match Modbus RTU byte count specification.");
+            }
+
+            ushort receivedCrc = (ushort)(responseBytes[expectedFrameLength - 2] | (responseBytes[expectedFrameLength - 1] << 8));
+            ushort calculatedCrc = CalculateCrc(responseBytes, expectedFrameLength - 2);
             if (receivedCrc != calculatedCrc)
             {
                 throw new ModbusException("CRC Check failed! Data corrupted.");
@@ -48,7 +56,6 @@ namespace ModbusDriver.Formatters
                 throw new ModbusException($"Unexpected function code received. Expected: {expectedFunctionCode}, but got other code.");
             }
 
-            byte byteCount = responseBytes[2];
             byte[] data = new byte[byteCount];
             Array.Copy(responseBytes, 3, data, 0, byteCount);
             return data;
