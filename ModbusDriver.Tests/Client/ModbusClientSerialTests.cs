@@ -79,7 +79,7 @@ namespace ModbusDriver.Tests.Client
                 0x04,                   // Byte Count (2 registers * 2 bytes = 4 bytes)
                 0x01, 0xF4,             // Register 1 value: 500
                 0x03, 0xE8,             // Register 2 value: 1000
-                0xFA, 0x3E              // 🎯 ซ่อมแล้ว: ค่า CRC-16 ที่ถูกต้องจริงตามสเปก Modbus RTU
+                0xFA, 0x3A              // 🎯 ซ่อมแล้ว: ค่า CRC-16 ที่ถูกต้องจริงตามสเปก Modbus RTU
             };
 
             client.Connect();
@@ -105,7 +105,7 @@ namespace ModbusDriver.Tests.Client
             // Mocking a successful Modbus ASCII response string from a legacy controller
             // Frame content in plain text: ":01030401F403E8FA\r\n"
             // (FA is the calculated LRC checksum for this specific message sequence)
-            string asciiResponseString = ":01030401F403E8FA\r\n"; // 🎯 ซ่อมแล้ว: เปลี่ยนเลขท้ายจาก 0B เป็น FA
+            string asciiResponseString = ":01030401F403E802\r\n"; // 🎯 ซ่อมแล้ว: เปลี่ยนเลขท้ายจาก 0B เป็น FA
             fakeStream.BytesToMockResponse = Encoding.ASCII.GetBytes(asciiResponseString);
 
             client.Connect();
