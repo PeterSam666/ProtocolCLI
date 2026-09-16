@@ -3,7 +3,7 @@ using ModbusDriver.Core;
 using ModbusDriver.Formatters;
 using ModbusDriver.Streams;
 
-namespace ProtocolCLI.Client
+namespace ModbusDriver.Client
 {
     /// <summary>
     /// One-liner constructors for ModbusClient - picks the right formatter+stream pair

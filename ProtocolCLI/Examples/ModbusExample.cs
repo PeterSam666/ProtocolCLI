@@ -5,7 +5,7 @@ using ModbusDriver.Streams;
 using System;
 using System.IO.Ports;
 
-namespace ModbusDriver.Examples
+namespace ProtocolCLI.Examples
 {
     public static class ModbusExample
     {

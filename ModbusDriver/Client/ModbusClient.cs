@@ -6,11 +6,12 @@ using System.Text;
 
 namespace ModbusDriver.Client
 {
-    public class ModbusClient
+    public class ModbusClient : IDisposable
     {
         private readonly IModbusFormatter _formatter;
         private readonly IModbusStream _stream;
         private readonly object _networkLock = new object();
+        private bool _isDisposed = false;
 
         public ModbusClient(IModbusFormatter formatter, IModbusStream stream)
         {
@@ -142,6 +143,15 @@ namespace ModbusDriver.Client
                 bools[i] = bitArray[i];
             }
             return bools;
+        }
+
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _stream.Dispose();
+                _isDisposed = true;
+            }
         }
     }
 }
