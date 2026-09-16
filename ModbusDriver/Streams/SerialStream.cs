@@ -17,7 +17,7 @@ namespace ModbusDriver.Streams
         public int ReadTimeout { get; set; } = 1000;
         public int WriteTimeout { get; set; } = 1000;
 
-        public SerialStream(string portName, int baudRate = 9600, Parity parity = Parity.Even, int dataBits = 8, StopBits stopBits = StopBits.One)
+        public SerialStream(string portName, int baudRate = 9600, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One)
         {
             _portName = portName ?? throw new ArgumentNullException(nameof(portName));
             _baudRate = baudRate;
