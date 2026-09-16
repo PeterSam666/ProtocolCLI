@@ -123,7 +123,7 @@ namespace ProtocolCLI.Examples
 
             using (var stream = new UdpStream("192.168.1.10", port: 502))
             {
-                using (var client = ModbusClientFactory.CreateUdp(stream)) 
+                using (var client = ModbusClientFactory.CreateUdp(stream))
                 {
                     try
                     {
