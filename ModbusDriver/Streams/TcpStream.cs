@@ -65,7 +65,25 @@ namespace ModbusDriver.Streams
                 throw new InvalidOperationException("Modbus TCP device is not connected.");
             }
 
-            return _networkStream.Read(buffer, offset, count);
+            int headerRead = ReadExact(buffer, offset, 6);
+            if (headerRead < 6) return headerRead;
+
+            int remaining = (buffer[offset + 4] << 8) | buffer[offset + 5]; // length field
+            int bodyRead = ReadExact(buffer, offset + 6, remaining);
+
+            return 6 + bodyRead;
+        }
+
+        private int ReadExact(byte[] buffer, int offset, int count)
+        {
+            int totalRead = 0;
+            while (totalRead < count)
+            {
+                int read = _networkStream.Read(buffer, offset + totalRead, count - totalRead);
+                if (read == 0) break; // connection closed
+                totalRead += read;
+            }
+            return totalRead;
         }
 
         public void Dispose()

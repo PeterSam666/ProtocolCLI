@@ -1,11 +1,9 @@
 ﻿using ModbusDriver.Core;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ModbusDriver.Formatters
 {
-    public class ModbusTcpFormatter : IModbusFormatter
+    public class ModbusUdpFormatter : IModbusFormatter
     {
         private ushort _transactionId = 0;
 
@@ -56,20 +54,36 @@ namespace ModbusDriver.Formatters
         public byte[] ParseResponse(byte[] responseBytes, byte expectedFunctionCode)
         {
             if (responseBytes == null || responseBytes.Length < 9)
-                throw new ModbusException("Invalid Modbus TCP Response.");
+            {
+                throw new ModbusException("Invalid Modbus UDP Response.");
+            }
 
             byte functionCode = responseBytes[7];
 
             if ((functionCode & 0x80) != 0)
+            {
                 throw new ModbusException(responseBytes[8]);
+            }
 
             if (functionCode != expectedFunctionCode)
+            {
                 throw new ModbusException("Unexpected function code received.");
+            }
 
             byte byteCount = responseBytes[8];
+            if (responseBytes.Length < 9 + byteCount)
+            {
+                throw new ModbusException("Modbus UDP datagram shorter than declared byte count.");
+            }
+
             byte[] data = new byte[byteCount];
             Array.Copy(responseBytes, 9, data, 0, byteCount);
             return data;
+        }
+
+        public int TryGetFrameLength(byte[] buffer, int bytesReceived, byte expectedFunctionCode)
+        {
+            return bytesReceived;
         }
     }
 }

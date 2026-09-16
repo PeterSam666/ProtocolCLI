@@ -17,7 +17,7 @@ namespace ModbusDriver.Streams
         public int ReadTimeout { get; set; } = 1000;
         public int WriteTimeout { get; set; } = 1000;
 
-        public SerialStream(string portName, int baudRate = 9600, Parity parity = Parity.Even, int dataBits = 8, StopBits stopBits = StopBits.One)
+        public SerialStream(string portName, int baudRate = 9600, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One)
         {
             _portName = portName ?? throw new ArgumentNullException(nameof(portName));
             _baudRate = baudRate;
@@ -30,7 +30,10 @@ namespace ModbusDriver.Streams
 
         public void Connect()
         {
-            if (IsConnected) return;
+            if (IsConnected)
+            {
+                return;
+            }
 
             _serialPort = new SerialPort(_portName, _baudRate, _parity, _dataBits, _stopBits)
             {
@@ -42,18 +45,29 @@ namespace ModbusDriver.Streams
 
         public void Disconnect()
         {
-            if (_serialPort != null && _serialPort.IsOpen) _serialPort.Close();
+            if (_serialPort != null && _serialPort.IsOpen)
+            {
+                _serialPort.Close();
+            }
         }
 
         public void Write(byte[] buffer, int offset, int count)
         {
-            if (!IsConnected) throw new InvalidOperationException("Serial port is not open.");
+            if (!IsConnected)
+            {
+                throw new InvalidOperationException("Serial port is not open.");
+            }
+
             _serialPort.Write(buffer, offset, count);
         }
 
         public int Read(byte[] buffer, int offset, int count)
         {
-            if (!IsConnected) throw new InvalidOperationException("Serial port is not open.");
+            if (!IsConnected)
+            {
+                throw new InvalidOperationException("Serial port is not open.");
+            }
+
             return _serialPort.Read(buffer, offset, count);
         }
 

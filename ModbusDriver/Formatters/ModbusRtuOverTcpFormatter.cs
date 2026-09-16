@@ -1,11 +1,9 @@
 ﻿using ModbusDriver.Core;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ModbusDriver.Formatters
 {
-    public class ModbusRtuFormatter : IModbusFormatter
+    public class ModbusRtuOverTcpFormatter : IModbusFormatter
     {
         public byte[] BuildRequest(byte unitId, byte functionCode, ushort startAddress, ushort quantity, byte[] data = null)
         {
@@ -13,7 +11,6 @@ namespace ModbusDriver.Formatters
 
             if (data == null)
             {
-                // Read / Write-single: เหมือนเดิม
                 frame = new byte[8];
                 frame[0] = unitId;
                 frame[1] = functionCode;
@@ -87,6 +84,34 @@ namespace ModbusDriver.Formatters
             byte[] data = new byte[byteCount];
             Array.Copy(responseBytes, 3, data, 0, byteCount);
             return data;
+        }
+
+        public int TryGetFrameLength(byte[] buffer, int bytesReceived, byte expectedFunctionCode)
+        {
+            if (bytesReceived < 2)
+            {
+                return -1;
+            }
+
+            byte functionCode = buffer[1];
+
+            if ((functionCode & 0x80) != 0)
+            {
+                return 5;
+            }
+
+            if (functionCode == 5 || functionCode == 6 || functionCode == 15 || functionCode == 16)
+            {
+                return 8;
+            }
+
+            if (bytesReceived < 3)
+            {
+                return -1;
+            }
+
+            byte byteCount = buffer[2];
+            return 3 + byteCount + 2;
         }
 
         private ushort CalculateCrc(byte[] buffer, int length)
